@@ -305,11 +305,20 @@ const Dashboard = () => {
     }
     return projects.filter(p => {
       if (filterStatus && p.status !== filterStatus) return false;
-      const tName = (p.team?.name || p.team_name || 'Sem Time').toUpperCase();
+      const tName = (p.team?.name || p.team_name || 'Sem Time');
       if (filterTeam !== 'ALL' && tName !== filterTeam) return false;
       return true;
     });
   }, [projects, filterStatus, currentExportTeam, filterTeam]);
+
+  const dynamicTeams = useMemo(() => {
+    const teamsSet = new Set();
+    projects.forEach(p => {
+      const t = p.team?.name || p.team_name;
+      if (t) teamsSet.add(t);
+    });
+    return ['ALL', ...Array.from(teamsSet).sort()];
+  }, [projects]);
 
   const totalProjects = filteredProjects.length;
   const totalEntregas = filteredProjects.reduce((acc, p) => acc + (p.delivery_count || 0), 0);
@@ -437,9 +446,9 @@ const Dashboard = () => {
               <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginRight: '0.5rem' }}>Time:</span>
-                  {['ALL', 'YMS', 'TMS'].map(t => (
+                  {dynamicTeams.map(t => (
                     <button key={t} onClick={() => setFilterTeam(t)} style={{ padding: '0.35rem 0.8rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', border: `1px solid ${filterTeam === t ? 'var(--accent)' : 'var(--border)'}`, background: filterTeam === t ? 'rgba(139, 92, 246, 0.15)' : 'transparent', color: filterTeam === t ? 'var(--accent)' : 'var(--text-muted)', transition: 'all 0.15s' }}>
-                      {t === 'ALL' ? 'Todos' : t}
+                      {t === 'ALL' ? 'Todos' : (t.includes(' ') ? t.split(' ')[0] : t)}
                     </button>
                   ))}
                 </div>
