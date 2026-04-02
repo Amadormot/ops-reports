@@ -145,28 +145,43 @@ export async function importFileToSupabase(file) {
   async function getOrCreateClient(name) {
     if (!name) return null;
     if (clientCache[name] !== undefined) return clientCache[name];
-    const { data, error } = await supabase.from('dashboard_client').upsert({ name, created_at: new Date().toISOString() }, { onConflict: 'name' }).select('id').single();
-    if (error) throw new Error(`Cliente "${name}": ${error.message}`);
-    clientCache[name] = data.id;
-    return data.id;
+    let { data: existing } = await supabase.from('dashboard_client').select('id').eq('name', name).maybeSingle();
+    let id = existing?.id;
+    if (!id) {
+      const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+      if (error) throw new Error(`Cliente "${name}": ${error.message}`);
+      id = data.id;
+    }
+    clientCache[name] = id;
+    return id;
   }
 
   async function getOrCreateTeam(name) {
     if (!name) return null;
     if (teamCache[name] !== undefined) return teamCache[name];
-    const { data, error } = await supabase.from('dashboard_team').upsert({ name, created_at: new Date().toISOString() }, { onConflict: 'name' }).select('id').single();
-    if (error) throw new Error(`Time "${name}": ${error.message}`);
-    teamCache[name] = data.id;
-    return data.id;
+    let { data: existing } = await supabase.from('dashboard_team').select('id').eq('name', name).maybeSingle();
+    let id = existing?.id;
+    if (!id) {
+      const { data, error } = await supabase.from('dashboard_team').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+      if (error) throw new Error(`Time "${name}": ${error.message}`);
+      id = data.id;
+    }
+    teamCache[name] = id;
+    return id;
   }
 
   async function getOrCreateSegment(name) {
     if (!name) return null;
     if (segmentCache[name] !== undefined) return segmentCache[name];
-    const { data, error } = await supabase.from('dashboard_segment').upsert({ name, created_at: new Date().toISOString() }, { onConflict: 'name' }).select('id').single();
-    if (error) throw new Error(`Segmento "${name}": ${error.message}`);
-    segmentCache[name] = data.id;
-    return data.id;
+    let { data: existing } = await supabase.from('dashboard_segment').select('id').eq('name', name).maybeSingle();
+    let id = existing?.id;
+    if (!id) {
+      const { data, error } = await supabase.from('dashboard_segment').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+      if (error) throw new Error(`Segmento "${name}": ${error.message}`);
+      id = data.id;
+    }
+    segmentCache[name] = id;
+    return id;
   }
 
   // 4. Processar cada linha
@@ -187,7 +202,7 @@ export async function importFileToSupabase(file) {
       const status = STATUS_MAP[data.statusRaw] || 'PLANEJAMENTO';
       const actualEndDate = parseDate(data.dateStr);
 
-      const { error } = await supabase.from('dashboard_project').upsert({
+      const payload = {
         name: data.projName,
         client_id: clientId,
         team_id: teamId,
@@ -196,11 +211,22 @@ export async function importFileToSupabase(file) {
         delivery_count: data.deliveryCount,
         impediments: data.impediments,
         squad: data.squad,
-        status,
-        created_at: new Date().toISOString()
-      }, { onConflict: 'client_id,name' });
+        status
+      };
 
-      if (error) throw new Error(error.message);
+      // Verificar se projeto existe
+      const { data: extProj } = await supabase.from('dashboard_project')
+        .select('id').eq('client_id', clientId).eq('name', data.projName).maybeSingle();
+
+      if (extProj?.id) {
+        // Atualiza
+        const { error } = await supabase.from('dashboard_project').update(payload).eq('id', extProj.id);
+        if (error) throw new Error(error.message);
+      } else {
+        // Insere novo
+        const { error } = await supabase.from('dashboard_project').insert({ ...payload, created_at: new Date().toISOString() });
+        if (error) throw new Error(error.message);
+      }
       count++;
     } catch (err) {
       errors.push(`Linha "${row['Projeto'] || '?'}": ${err.message}`);
