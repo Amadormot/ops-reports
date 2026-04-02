@@ -2,6 +2,7 @@ services:
   # Backend: Django (Logística)
   - type: web
     name: ops-reports-api
+    plan: free
     runtime: python
     env: python
     rootDir: backend
