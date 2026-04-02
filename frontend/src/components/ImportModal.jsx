@@ -48,7 +48,7 @@ const ImportModal = ({ isOpen, onClose, onRefresh }) => {
             onChange={handleFileChange}
             style={{ display: 'none' }}
           />
-          <label htmlFor="fileInput" style={{ cursor: 'pointer' }}>
+          <label htmlFor="fileInput" style={{ cursor: 'pointer', display: 'block', marginBottom: '1rem' }}>
             <div style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>
               <Upload size={32} style={{ margin: '0 auto' }} />
             </div>
@@ -56,6 +56,24 @@ const ImportModal = ({ isOpen, onClose, onRefresh }) => {
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Formatos aceitos: .xlsx e .csv</p>
             <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Colunas: Cliente, Projeto, Término Real, Total, Segmento, Time, Squad, Impetitivos, Status</p>
           </label>
+          <a
+            href="/modelo_importacao.csv"
+            download="modelo_importacao.csv"
+            style={{
+              display: 'inline-block',
+              fontSize: '0.75rem',
+              color: 'var(--primary)',
+              textDecoration: 'none',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '20px',
+              transition: 'background 0.2s',
+            }}
+            onMouseOver={(e) => e.target.style.background = 'rgba(139, 92, 246, 0.1)'}
+            onMouseOut={(e) => e.target.style.background = 'transparent'}
+          >
+            Baixar Arquivo Modelo (.csv)
+          </a>
         </div>
 
         {result && (
