@@ -163,8 +163,7 @@ export async function importFileToSupabase(file) {
     let { data: existing } = await supabase.from('dashboard_team').select('id').eq('name', name).maybeSingle();
     let id = existing?.id;
     if (!id) {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase.from('dashboard_team').insert({ name, created_at: now, updated_at: now }).select('id').single();
+      const { data, error } = await supabase.from('dashboard_team').insert({ name }).select('id').single();
       if (error) throw new Error(`Time "${name}": ${error.message}`);
       id = data.id;
     }
@@ -178,8 +177,7 @@ export async function importFileToSupabase(file) {
     let { data: existing } = await supabase.from('dashboard_segment').select('id').eq('name', name).maybeSingle();
     let id = existing?.id;
     if (!id) {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase.from('dashboard_segment').insert({ name, created_at: now, updated_at: now }).select('id').single();
+      const { data, error } = await supabase.from('dashboard_segment').insert({ name }).select('id').single();
       if (error) throw new Error(`Segmento "${name}": ${error.message}`);
       id = data.id;
     }
