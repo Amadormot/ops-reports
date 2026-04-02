@@ -164,47 +164,25 @@ const ImpedimentCard = ({ projects }) => {
     </div>
   );
 };
-const ConfirmModal = ({ isOpen, onConfirm, onCancel, loading }) => {
-  if (!isOpen) return null;
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-      <div className="card" style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-          <div style={{ background: 'rgba(239,68,68,0.15)', borderRadius: '50%', padding: '1rem' }}>
-            <AlertTriangle size={32} color="var(--danger)" />
-          </div>
-        </div>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Excluir todos os projetos?</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-          Esta ação remove <strong>todos</strong> os projetos. Use para importar uma nova planilha.
-        </p>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onCancel} disabled={loading}>Cancelar</button>
-          <button className="btn" style={{ flex: 1, background: 'var(--danger)', color: '#fff', justifyContent: 'center', gap: '0.5rem' }} onClick={onConfirm} disabled={loading}>
-            {loading ? <Loader2 size={15} /> : <Trash2 size={15} />}
-            {loading ? 'Excluindo...' : 'Excluir Tudo'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+
 
 // ─── Dashboard ─────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const [projects, setProjects]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [importOpen, setImportOpen]     = useState(false);
-  const [confirmOpen, setConfirmOpen]   = useState(false);
-  const [clearLoading, setClearLoading] = useState(false);
   const [toast, setToast]               = useState(null);
+  
+  // Mock de Login
+  const [loggedTeam, setLoggedTeam]     = useState('ALL');
+
   const [groupBy, setGroupBy]           = useState('squad'); // 'squad' | 'team' | 'segment'
-  const [filterTeam, setFilterTeam]     = useState('ALL'); // 'ALL' | 'YMS' | 'TMS'
+  const [filterTeam, setFilterTeam]     = useState('ALL'); // Filtro apenas via consolidação
   const [filterStatus, setFilterStatus] = useState(''); // '' | 'PLANEJAMENTO' | 'EM_IMPLANTACAO' | 'ENTREGUE'
   const [showImpediments, setShowImpediments] = useState(false);
   const [isExporting, setIsExporting]           = useState(false);
   const [exportMsg, setExportMsg]               = useState('');
-  const [currentExportTeam, setCurrentExportTeam] = useState(null); // Para controle de exportação em lote
+  const [currentExportTeam, setCurrentExportTeam] = useState(null);
 
   const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 4000); };
 
@@ -217,12 +195,7 @@ const Dashboard = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleClearAll = async () => {
-    setClearLoading(true);
-    try { const r = await dashboardService.clearAll(); showToast(r.data.message); setConfirmOpen(false); fetchData(); }
-    catch { showToast('Erro ao excluir.', 'error'); }
-    finally { setClearLoading(false); }
-  };
+
 
   const exportToPDF = async (title = 'Dashboard', filename = `relatorio-${new Date().toISOString().slice(0,10)}.pdf`) => {
     setIsExporting(true);
@@ -299,20 +272,32 @@ const Dashboard = () => {
   };
 
   const filteredProjects = useMemo(() => {
-    // Se estivermos no meio de um loop de exportação por time, usamos o filtro do time
+    // Se estivermos na visão local de um Time em particular, apenas esse time
+    if (loggedTeam !== 'ALL') {
+      return projects.filter(p => {
+        const tName = (p.team?.name || p.team_name || 'Sem Time');
+        if (tName !== loggedTeam) return false;
+        if (filterStatus && p.status !== filterStatus) return false;
+        return true;
+      });
+    }
+
+    // Exportação em Lote via Consolidado
     if (currentExportTeam) {
       return projects.filter(p => (p.team_name || 'Sem Time') === currentExportTeam);
     }
+
+    // Modo Consolidado (ALL)
     return projects.filter(p => {
       if (filterStatus && p.status !== filterStatus) return false;
       const tName = (p.team?.name || p.team_name || 'Sem Time');
       if (filterTeam !== 'ALL' && tName !== filterTeam) return false;
       return true;
     });
-  }, [projects, filterStatus, currentExportTeam, filterTeam]);
+  }, [projects, filterStatus, currentExportTeam, filterTeam, loggedTeam]);
 
   const dynamicTeams = useMemo(() => {
-    const teamsSet = new Set();
+    const teamsSet = new Set(['Estrategia e consultoria de implantação']); // Times base explícitos
     projects.forEach(p => {
       const t = p.team?.name || p.team_name;
       if (t) teamsSet.add(t);
@@ -379,9 +364,7 @@ const Dashboard = () => {
           <button onClick={fetchData} title="Atualizar" className="no-print" style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: '8px', padding: '0.45rem 0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <RefreshCw size={15} />
           </button>
-          <button className="btn btn-ghost no-print" onClick={() => setConfirmOpen(true)} style={{ color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.3)', gap: '0.4rem', fontSize: '0.82rem' }}>
-            <Trash2 size={15} /> Limpar
-          </button>
+
           
           <div style={{ height: '32px', width: '1px', background: 'var(--border)', margin: '0 0.5rem' }} className="no-print" />
           
@@ -393,7 +376,28 @@ const Dashboard = () => {
             {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Briefcase size={14} />} PDF por Time
           </button>
 
-          <button className="btn btn-primary no-print" onClick={() => setImportOpen(true)} style={{ gap: '0.4rem', fontSize: '0.82rem' }}>
+          <div style={{ padding: '0.5rem 1rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Perfil Acesso:</span>
+            <select className="no-print" value={loggedTeam} onChange={e => {setLoggedTeam(e.target.value); setFilterTeam('ALL');}} style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: 800, fontSize: '0.82rem', outline: 'none', cursor: 'pointer' }}>
+              <option value="ALL">Visão Consolidada</option>
+              {dynamicTeams.filter(t => t !== 'ALL').map(t => (
+                <option key={t} value={t}>Time: {t}</option>
+              ))}
+            </select>
+          </div>
+
+          <button 
+             className="btn btn-primary no-print" 
+             onClick={() => {
+                if (loggedTeam === 'ALL') {
+                   showToast('Você não pode importar do Consolidado. Altere seu Perfil de Acesso para o seu Time!', 'error');
+                } else {
+                   setImportOpen(true);
+                }
+             }} 
+             style={{ gap: '0.4rem', fontSize: '0.82rem', background: loggedTeam === 'ALL' ? 'var(--border)' : 'var(--primary)' }}
+             title={loggedTeam === 'ALL' ? 'Apenas times isolados podem importar planilhas.' : 'Importar sua planilha de time'}
+          >
             <Upload size={15} /> Importar Planilha
           </button>
         </div>
@@ -496,8 +500,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <ImportModal isOpen={importOpen} onClose={() => setImportOpen(false)} onRefresh={fetchData} />
-      <ConfirmModal isOpen={confirmOpen} onConfirm={handleClearAll} onCancel={() => setConfirmOpen(false)} loading={clearLoading} />
+      <ImportModal isOpen={importOpen} onClose={() => setImportOpen(false)} onRefresh={fetchData} loggedTeam={loggedTeam} />
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );

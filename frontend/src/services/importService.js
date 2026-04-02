@@ -106,7 +106,7 @@ async function readFile(file) {
   });
 }
 
-export async function importFileToSupabase(file) {
+export async function importFileToSupabase(file, loggedTeam) {
   // 1. Ler arquivo
   let rows;
   try {
@@ -127,6 +127,30 @@ export async function importFileToSupabase(file) {
       success: false,
       message: `Colunas obrigatórias ausentes: ${missing.join(', ')}. Certifique-se de que o arquivo contém: Cliente, Projeto, Término Real, Total, Segmento, Time, Impetitivos, Status.`,
       errors: [],
+    };
+  }
+
+  // 2.5 Validar Isolamento de Times (Silos)
+  const foundTeams = new Set();
+  for (const row of rows) {
+    const data = parseRow(row);
+    if (!data.clientName || !data.projName) continue;
+    if (data.teamName) foundTeams.add(data.teamName);
+  }
+
+  if (foundTeams.size > 1) {
+    return { 
+      success: false, 
+      message: 'Operação bloqueada! A planilha contém projetos de múltiplos times. Você só pode enviar 1 arquivo único para o seu próprio time por vez.', 
+      errors: [] 
+    };
+  }
+
+  if (loggedTeam && loggedTeam !== 'ALL' && foundTeams.size === 1 && !foundTeams.has(loggedTeam)) {
+    return {
+      success: false,
+      message: `Operação bloqueada! A planilha pertence ao time "${Array.from(foundTeams)[0]}", mas você está logado como "${loggedTeam}".`,
+      errors: []
     };
   }
 

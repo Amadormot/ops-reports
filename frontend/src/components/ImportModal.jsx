@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { importFileToSupabase } from '../services/importService';
 
-const ImportModal = ({ isOpen, onClose, onRefresh }) => {
+const ImportModal = ({ isOpen, onClose, onRefresh, loggedTeam }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -19,7 +19,7 @@ const ImportModal = ({ isOpen, onClose, onRefresh }) => {
     setLoading(true);
     setResult(null);
     try {
-      const result = await importFileToSupabase(file);
+      const result = await importFileToSupabase(file, loggedTeam);
       setResult({ success: result.success, message: result.message, errors: result.errors });
       if (result.success && onRefresh) onRefresh();
     } catch (error) {

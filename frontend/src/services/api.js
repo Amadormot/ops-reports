@@ -54,19 +54,7 @@ export const dashboardService = {
     return { data: normalized };
   },
 
-  // Limpar todos os dados (Delete Everything)
-  clearAll: async () => {
-    // Apaga projetos que não tem ID = 0 (ou seja, todos)
-    const { error: epErr } = await supabase.from('dashboard_project').delete().neq('id', 0);
-    if (epErr) throw epErr;
-    const { error: ecErr } = await supabase.from('dashboard_client').delete().neq('id', 0);
-    if (ecErr) throw ecErr;
-    const { error: etErr } = await supabase.from('dashboard_team').delete().neq('id', 0);
-    if (etErr) throw etErr;
-    const { error: esErr } = await supabase.from('dashboard_segment').delete().neq('id', 0);
-    if (esErr) throw esErr;
-    return { data: { message: 'Todos os dados foram removidos com sucesso!' } };
-  },
+
 };
 
 export default supabase;
