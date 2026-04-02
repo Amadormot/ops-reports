@@ -417,8 +417,9 @@ const Dashboard = () => {
       ) : (
         <div id="dashboard-print-area" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--bg-main)' }}>
           {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
-            <KPI label="Total Entregas"  value={totalEntregas} color="var(--accent)" sub={`Em ${totalProjects} projetos`} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
+            <KPI label="Total Projetos"  value={totalProjects} color="var(--primary)" sub="Cadastrados no painel" />
+            <KPI label="Total Entregas"  value={totalEntregas} color="var(--accent)" sub="Previstas ou realizadas" />
             <KPI label="Planejados"      value={plan}  color="#f59e0b" pct={totalProjects ? Math.round(plan/totalProjects*100) : 0} sub={`${totalProjects ? Math.round(plan/totalProjects*100) : 0}% dos projetos`} />
             <KPI label="Em Implantação"  value={impl}  color="#3b82f6" pct={totalProjects ? Math.round(impl/totalProjects*100) : 0} sub={`${totalProjects ? Math.round(impl/totalProjects*100) : 0}% dos projetos`} />
             <KPI label="Finalizados"     value={done}  color="#10b981" pct={totalProjects ? Math.round(done/totalProjects*100) : 0} sub={`${totalProjects ? Math.round(done/totalProjects*100) : 0}% dos projetos`} />
