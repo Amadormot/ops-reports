@@ -199,6 +199,7 @@ const Dashboard = () => {
   const [clearLoading, setClearLoading] = useState(false);
   const [toast, setToast]               = useState(null);
   const [groupBy, setGroupBy]           = useState('squad'); // 'squad' | 'team' | 'segment'
+  const [filterTeam, setFilterTeam]     = useState('ALL'); // 'ALL' | 'YMS' | 'TMS'
   const [filterStatus, setFilterStatus] = useState(''); // '' | 'PLANEJAMENTO' | 'EM_IMPLANTACAO' | 'ENTREGUE'
   const [showImpediments, setShowImpediments] = useState(false);
   const [isExporting, setIsExporting]           = useState(false);
@@ -302,8 +303,13 @@ const Dashboard = () => {
     if (currentExportTeam) {
       return projects.filter(p => (p.team_name || 'Sem Time') === currentExportTeam);
     }
-    return projects.filter(p => !filterStatus || p.status === filterStatus);
-  }, [projects, filterStatus, currentExportTeam]);
+    return projects.filter(p => {
+      if (filterStatus && p.status !== filterStatus) return false;
+      const tName = (p.team?.name || p.team_name || 'Sem Time').toUpperCase();
+      if (filterTeam !== 'ALL' && tName !== filterTeam) return false;
+      return true;
+    });
+  }, [projects, filterStatus, currentExportTeam, filterTeam]);
 
   const totalProjects = filteredProjects.length;
   const totalEntregas = filteredProjects.reduce((acc, p) => acc + (p.delivery_count || 0), 0);
@@ -426,9 +432,29 @@ const Dashboard = () => {
 
           {/* ÁREA DE RELATÓRIO */}
           <div style={{ marginTop: '0.5rem' }}>
-            {/* Filtros de Status e Agrupamento (Ocultos no PDF) */}
-            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {/* Filtros de Status, Time e Agrupamento (Ocultos no PDF) */}
+            <div className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginRight: '0.5rem' }}>Time:</span>
+                  {['ALL', 'YMS', 'TMS'].map(t => (
+                    <button key={t} onClick={() => setFilterTeam(t)} style={{ padding: '0.35rem 0.8rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', border: `1px solid ${filterTeam === t ? 'var(--accent)' : 'var(--border)'}`, background: filterTeam === t ? 'rgba(139, 92, 246, 0.15)' : 'transparent', color: filterTeam === t ? 'var(--accent)' : 'var(--text-muted)', transition: 'all 0.15s' }}>
+                      {t === 'ALL' ? 'Todos' : t}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.5rem' }}>Agrupar por:</span>
+                  {[['squad', 'Squad'], ['team', 'Time'], ['segment', 'Segmento']].map(([k, l]) => (
+                    <button key={k} onClick={() => setGroupBy(k)} style={{ padding: '0.35rem 0.8rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', border: `1px solid ${groupBy === k ? 'var(--primary)' : 'var(--border)'}`, background: groupBy === k ? 'var(--primary-glow)' : 'transparent', color: groupBy === k ? 'var(--primary)' : 'var(--text-muted)', transition: 'all 0.15s' }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.5rem' }}>Filtrar Status:</span>
                 {Object.entries(STATUS).map(([key, cfg]) => (
                   <button key={key} onClick={() => setFilterStatus(filterStatus === key ? '' : key)} style={{ padding: '0.35rem 0.8rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', border: `1px solid ${filterStatus === key ? cfg.color : 'var(--border)'}`, background: filterStatus === key ? cfg.bg : 'transparent', color: filterStatus === key ? cfg.color : 'var(--text-muted)', transition: 'all 0.15s' }}>

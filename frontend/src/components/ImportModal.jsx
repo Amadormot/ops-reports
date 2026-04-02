@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { dashboardService } from '../services/api';
+import { importFileToSupabase } from '../services/importService';
 
 const ImportModal = ({ isOpen, onClose, onRefresh }) => {
   const [file, setFile] = useState(null);
@@ -19,13 +19,11 @@ const ImportModal = ({ isOpen, onClose, onRefresh }) => {
     setLoading(true);
     setResult(null);
     try {
-      const response = await dashboardService.importFile(file);
-      setResult({ success: true, message: response.data.message, errors: response.data.errors });
-      if (onRefresh) onRefresh();
+      const result = await importFileToSupabase(file);
+      setResult({ success: result.success, message: result.message, errors: result.errors });
+      if (result.success && onRefresh) onRefresh();
     } catch (error) {
-      // Exibe a mensagem real do backend se disponível
-      const msg = error?.response?.data?.error || 'Erro técnico ao processar o arquivo. Tente novamente.';
-      setResult({ success: false, message: msg });
+      setResult({ success: false, message: 'Erro técnico ao processar o arquivo. Tente novamente.' });
     } finally {
       setLoading(false);
     }
