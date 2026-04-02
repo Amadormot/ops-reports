@@ -148,8 +148,7 @@ export async function importFileToSupabase(file) {
     let { data: existing } = await supabase.from('dashboard_client').select('id').eq('name', name).maybeSingle();
     let id = existing?.id;
     if (!id) {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: now, updated_at: now }).select('id').single();
+      const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: new Date().toISOString() }).select('id').single();
       if (error) throw new Error(`Cliente "${name}": ${error.message}`);
       id = data.id;
     }
