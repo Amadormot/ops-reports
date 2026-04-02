@@ -82,20 +82,20 @@ const ImportModal = ({ isOpen, onClose, onRefresh }) => {
         </div>
 
         {result && (
-          <div style={{ padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', background: result.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${result.success ? 'var(--success)' : 'var(--danger)'}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+          <div style={{ padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', background: result.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${result.success ? 'var(--success)' : 'var(--danger)'}`, maxHeight: '35vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', position: 'sticky', top: 0, paddingBottom: '0.5rem', background: 'var(--bg-card)', zIndex: 10 }}>
               {result.success ? <CheckCircle size={16} color="var(--success)" /> : <AlertCircle size={16} color="var(--danger)" />}
               <span>{result.message}</span>
             </div>
             {result.errors && result.errors.length > 0 && (
               <ul style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--danger)', listStyle: 'none', padding: 0 }}>
-                {result.errors.map((err, i) => <li key={i}>• {err}</li>)}
+                {result.errors.map((err, i) => <li key={i} style={{ marginBottom: '0.2rem' }}>• {err}</li>)}
               </ul>
             )}
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
           <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onClose} disabled={loading}>
             Cancelar
           </button>
