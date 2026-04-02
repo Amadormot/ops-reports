@@ -132,9 +132,9 @@ export async function importFileToSupabase(file) {
 
   // 3. Buscar dados existentes do Supabase para montar caches
   const [{ data: existingClients }, { data: existingTeams }, { data: existingSegments }] = await Promise.all([
-    supabase.from('clients').select('id, name'),
-    supabase.from('teams').select('id, name'),
-    supabase.from('segments').select('id, name'),
+    supabase.from('dashboard_client').select('id, name'),
+    supabase.from('dashboard_team').select('id, name'),
+    supabase.from('dashboard_segment').select('id, name'),
   ]);
 
   const clientCache = Object.fromEntries((existingClients || []).map(c => [c.name, c.id]));
@@ -145,7 +145,7 @@ export async function importFileToSupabase(file) {
   async function getOrCreateClient(name) {
     if (!name) return null;
     if (clientCache[name] !== undefined) return clientCache[name];
-    const { data, error } = await supabase.from('clients').upsert({ name }, { onConflict: 'name' }).select('id').single();
+    const { data, error } = await supabase.from('dashboard_client').upsert({ name }, { onConflict: 'name' }).select('id').single();
     if (error) throw new Error(`Cliente "${name}": ${error.message}`);
     clientCache[name] = data.id;
     return data.id;
@@ -154,7 +154,7 @@ export async function importFileToSupabase(file) {
   async function getOrCreateTeam(name) {
     if (!name) return null;
     if (teamCache[name] !== undefined) return teamCache[name];
-    const { data, error } = await supabase.from('teams').upsert({ name }, { onConflict: 'name' }).select('id').single();
+    const { data, error } = await supabase.from('dashboard_team').upsert({ name }, { onConflict: 'name' }).select('id').single();
     if (error) throw new Error(`Time "${name}": ${error.message}`);
     teamCache[name] = data.id;
     return data.id;
@@ -163,7 +163,7 @@ export async function importFileToSupabase(file) {
   async function getOrCreateSegment(name) {
     if (!name) return null;
     if (segmentCache[name] !== undefined) return segmentCache[name];
-    const { data, error } = await supabase.from('segments').upsert({ name }, { onConflict: 'name' }).select('id').single();
+    const { data, error } = await supabase.from('dashboard_segment').upsert({ name }, { onConflict: 'name' }).select('id').single();
     if (error) throw new Error(`Segmento "${name}": ${error.message}`);
     segmentCache[name] = data.id;
     return data.id;
@@ -187,7 +187,7 @@ export async function importFileToSupabase(file) {
       const status = STATUS_MAP[data.statusRaw] || 'PLANEJAMENTO';
       const actualEndDate = parseDate(data.dateStr);
 
-      const { error } = await supabase.from('projects').upsert({
+      const { error } = await supabase.from('dashboard_project').upsert({
         name: data.projName,
         client_id: clientId,
         team_id: teamId,
@@ -197,7 +197,7 @@ export async function importFileToSupabase(file) {
         impediments: data.impediments,
         squad: data.squad,
         status,
-      }, { onConflict: 'name,client_id' });
+      }, { onConflict: 'client_id,name' });
 
       if (error) throw new Error(error.message);
       count++;
