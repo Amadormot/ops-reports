@@ -145,7 +145,7 @@ export async function importFileToSupabase(file) {
   async function getOrCreateClient(name) {
     if (!name) return null;
     if (clientCache[name] !== undefined) return clientCache[name];
-    const { data, error } = await supabase.from('dashboard_client').upsert({ name }, { onConflict: 'name' }).select('id').single();
+    const { data, error } = await supabase.from('dashboard_client').upsert({ name, created_at: new Date().toISOString() }, { onConflict: 'name' }).select('id').single();
     if (error) throw new Error(`Cliente "${name}": ${error.message}`);
     clientCache[name] = data.id;
     return data.id;
@@ -154,7 +154,7 @@ export async function importFileToSupabase(file) {
   async function getOrCreateTeam(name) {
     if (!name) return null;
     if (teamCache[name] !== undefined) return teamCache[name];
-    const { data, error } = await supabase.from('dashboard_team').upsert({ name }, { onConflict: 'name' }).select('id').single();
+    const { data, error } = await supabase.from('dashboard_team').upsert({ name, created_at: new Date().toISOString() }, { onConflict: 'name' }).select('id').single();
     if (error) throw new Error(`Time "${name}": ${error.message}`);
     teamCache[name] = data.id;
     return data.id;
@@ -163,7 +163,7 @@ export async function importFileToSupabase(file) {
   async function getOrCreateSegment(name) {
     if (!name) return null;
     if (segmentCache[name] !== undefined) return segmentCache[name];
-    const { data, error } = await supabase.from('dashboard_segment').upsert({ name }, { onConflict: 'name' }).select('id').single();
+    const { data, error } = await supabase.from('dashboard_segment').upsert({ name, created_at: new Date().toISOString() }, { onConflict: 'name' }).select('id').single();
     if (error) throw new Error(`Segmento "${name}": ${error.message}`);
     segmentCache[name] = data.id;
     return data.id;
@@ -197,6 +197,7 @@ export async function importFileToSupabase(file) {
         impediments: data.impediments,
         squad: data.squad,
         status,
+        created_at: new Date().toISOString()
       }, { onConflict: 'client_id,name' });
 
       if (error) throw new Error(error.message);
