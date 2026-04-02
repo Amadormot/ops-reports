@@ -1,0 +1,22 @@
+services:
+  # Backend: Django
+  - type: web
+    name: ops-reports-api
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn core.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ops-reports-db
+          property: connectionString
+
+databases:
+  - name: ops-reports-db
+    plan: free
