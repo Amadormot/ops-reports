@@ -148,7 +148,8 @@ export async function importFileToSupabase(file) {
     let { data: existing } = await supabase.from('dashboard_client').select('id').eq('name', name).maybeSingle();
     let id = existing?.id;
     if (!id) {
-      const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+      const now = new Date().toISOString();
+      const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: now, updated_at: now }).select('id').single();
       if (error) throw new Error(`Cliente "${name}": ${error.message}`);
       id = data.id;
     }
@@ -162,7 +163,8 @@ export async function importFileToSupabase(file) {
     let { data: existing } = await supabase.from('dashboard_team').select('id').eq('name', name).maybeSingle();
     let id = existing?.id;
     if (!id) {
-      const { data, error } = await supabase.from('dashboard_team').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+      const now = new Date().toISOString();
+      const { data, error } = await supabase.from('dashboard_team').insert({ name, created_at: now, updated_at: now }).select('id').single();
       if (error) throw new Error(`Time "${name}": ${error.message}`);
       id = data.id;
     }
@@ -176,7 +178,8 @@ export async function importFileToSupabase(file) {
     let { data: existing } = await supabase.from('dashboard_segment').select('id').eq('name', name).maybeSingle();
     let id = existing?.id;
     if (!id) {
-      const { data, error } = await supabase.from('dashboard_segment').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+      const now = new Date().toISOString();
+      const { data, error } = await supabase.from('dashboard_segment').insert({ name, created_at: now, updated_at: now }).select('id').single();
       if (error) throw new Error(`Segmento "${name}": ${error.message}`);
       id = data.id;
     }
@@ -211,7 +214,8 @@ export async function importFileToSupabase(file) {
         delivery_count: data.deliveryCount,
         impediments: data.impediments,
         squad: data.squad,
-        status
+        status,
+        updated_at: new Date().toISOString()
       };
 
       // Verificar se projeto existe
