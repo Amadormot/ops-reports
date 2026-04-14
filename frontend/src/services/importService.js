@@ -24,6 +24,14 @@ const STATUS_MAP = {
 
 const FILL_DOWN_FIELDS = ['Cliente', 'Segmento', 'Time', 'Squad', 'Status'];
 
+function normalizeText(str) {
+  if (!str) return '';
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+}
+
 function parseDate(dateStr) {
   if (!dateStr || ['-', 'None', ''].includes(dateStr)) return null;
   const formats = [
@@ -52,15 +60,15 @@ function parseRow(rowDict) {
   try { deliveryCount = Math.round(parseFloat(rawTotal)) || 0; } catch (_) {}
 
   return {
-    clientName: (rowDict['Cliente'] || '').trim(),
+    clientName: normalizeText(rowDict['Cliente']),
     projName: (rowDict['Projeto'] || '').trim(),
     dateStr: String(rowDict['Término Real'] || '').trim(),
     deliveryCount,
-    segmentName: (rowDict['Segmento'] || '').trim(),
-    teamName: (rowDict['Time'] || '').trim(),
+    segmentName: normalizeText(rowDict['Segmento']),
+    teamName: normalizeText(rowDict['Time']),
     impediments: impedimentsVal,
     statusRaw: (rowDict['Status'] || '').trim().toLowerCase(),
-    squad: (rowDict['Squad'] || '').trim(),
+    squad: normalizeText(rowDict['Squad']),
   };
 }
 
