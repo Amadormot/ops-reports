@@ -169,51 +169,47 @@ export async function importFileToSupabase(file, loggedTeam) {
     supabase.from('dashboard_segment').select('id, name'),
   ]);
 
-  const clientCache = Object.fromEntries((existingClients || []).map(c => [c.name, c.id]));
-  const teamCache = Object.fromEntries((existingTeams || []).map(t => [t.name, t.id]));
-  const segmentCache = Object.fromEntries((existingSegments || []).map(s => [s.name, s.id]));
+  const normalizeForMatch = (str) => {
+    if (!str) return '';
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  };
+
+  const clientCache = Object.fromEntries((existingClients || []).map(c => [normalizeForMatch(c.name), c.id]));
+  const teamCache = Object.fromEntries((existingTeams || []).map(t => [normalizeForMatch(t.name), t.id]));
+  const segmentCache = Object.fromEntries((existingSegments || []).map(s => [normalizeForMatch(s.name), s.id]));
 
   // Helper: get-or-create com cache
   async function getOrCreateClient(name) {
     if (!name) return null;
-    if (clientCache[name] !== undefined) return clientCache[name];
-    let { data: existing } = await supabase.from('dashboard_client').select('id').eq('name', name).maybeSingle();
-    let id = existing?.id;
-    if (!id) {
-      const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: new Date().toISOString() }).select('id').single();
-      if (error) throw new Error(`Cliente "${name}": ${error.message}`);
-      id = data.id;
-    }
-    clientCache[name] = id;
-    return id;
+    const matchKey = normalizeForMatch(name);
+    if (clientCache[matchKey] !== undefined) return clientCache[matchKey];
+    
+    const { data, error } = await supabase.from('dashboard_client').insert({ name, created_at: new Date().toISOString() }).select('id').single();
+    if (error) throw new Error(`Cliente "${name}": ${error.message}`);
+    clientCache[matchKey] = data.id;
+    return data.id;
   }
 
   async function getOrCreateTeam(name) {
     if (!name) return null;
-    if (teamCache[name] !== undefined) return teamCache[name];
-    let { data: existing } = await supabase.from('dashboard_team').select('id').eq('name', name).maybeSingle();
-    let id = existing?.id;
-    if (!id) {
-      const { data, error } = await supabase.from('dashboard_team').insert({ name }).select('id').single();
-      if (error) throw new Error(`Time "${name}": ${error.message}`);
-      id = data.id;
-    }
-    teamCache[name] = id;
-    return id;
+    const matchKey = normalizeForMatch(name);
+    if (teamCache[matchKey] !== undefined) return teamCache[matchKey];
+    
+    const { data, error } = await supabase.from('dashboard_team').insert({ name }).select('id').single();
+    if (error) throw new Error(`Time "${name}": ${error.message}`);
+    teamCache[matchKey] = data.id;
+    return data.id;
   }
 
   async function getOrCreateSegment(name) {
     if (!name) return null;
-    if (segmentCache[name] !== undefined) return segmentCache[name];
-    let { data: existing } = await supabase.from('dashboard_segment').select('id').eq('name', name).maybeSingle();
-    let id = existing?.id;
-    if (!id) {
-      const { data, error } = await supabase.from('dashboard_segment').insert({ name }).select('id').single();
-      if (error) throw new Error(`Segmento "${name}": ${error.message}`);
-      id = data.id;
-    }
-    segmentCache[name] = id;
-    return id;
+    const matchKey = normalizeForMatch(name);
+    if (segmentCache[matchKey] !== undefined) return segmentCache[matchKey];
+    
+    const { data, error } = await supabase.from('dashboard_segment').insert({ name }).select('id').single();
+    if (error) throw new Error(`Segmento "${name}": ${error.message}`);
+    segmentCache[matchKey] = data.id;
+    return data.id;
   }
 
   // 4. Processar cada linha
